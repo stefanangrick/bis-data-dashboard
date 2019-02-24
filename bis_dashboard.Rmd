@@ -1,0 +1,417 @@
+---
+title: "BIS data dashboard"
+output: 
+  flexdashboard::flex_dashboard:
+    theme: bootstrap
+    orientation: columns
+    vertical_layout: scroll
+    source_code: embed
+    navbar:
+      - { title: "BIS Statistics", href: "https://www.bis.org/statistics/", align: right }
+      - { title: "BIS Statistics Explorer", href: "https://stats.bis.org/statx/", align: right }
+      - { title: "BIS Statistics Warehouse", href: "http://stats.bis.org/bis-stats-tool/", align: right }
+      - { title: "Raw data", href: "https://www.bis.org/statistics/full_data_sets.htm", align: right }
+params:
+  ctr: "JP"
+---
+
+```{css, echo = FALSE}
+p.caption {
+  font-size: 0.8em;
+  font-style: italic;
+  color: grey;
+  margin-right: 10%;
+  margin-left: 10%;  
+  text-align: justify;
+}
+
+.js-plotly-plot,
+.plot-container {
+  height: 32vh;
+  width: 24vw;
+}
+```
+
+```{r include = FALSE}
+# Uncomment this to refresh data
+#source("refresh_bis_data.R")
+
+source("bis_helper_functions.R")
+load("bis_stats.RData")
+
+#ctr       <- "JP"
+ctr       <- params$ctr
+refctr    <- sort(c("US", "XM", "DE", "JP", "GB", "CH", "CA"))
+startdate <- as.Date("2000-01-01")
+
+ctrn      <- countrycode(ctr, "iso2c", "country.name",
+                         custom_match = c("XM" = "Euro Area"))
+ctrs      <- paste(paste(ctrn, paste0("(", ctr, ")")), collapse = ", ")
+refctrn   <- countrycode(refctr, "iso2c", "country.name",
+                         custom_match = c("XM" = "Euro Area"))
+refctrs   <- paste(paste(refctrn, paste0("(", refctr, ")")), collapse = ", ")
+```
+
+# Information {.sidebar}
+
+**Economy:** `r ctrs`
+
+**Reference economies:** `r refctrs`
+
+**Plots start:** `r startdate`
+
+**Last data update:** `r lastrefresh`
+
+This dashboard is not officially related to, or endorsed by, the BIS.
+
+[Source on GitHub](https://github.com/stefanangrick/)
+
+# `r ctrn`
+
+## Column 1
+
+### Credit to the private nonfinancial sector
+
+```{r echo = FALSE, fig.cap = "Source: [Bank for International Settlements](stats.bis.org/statx/toc/CRE.html)"}
+creData <- GetCreData(cre, ctr, refctr)
+if (!is.null(creData)) {
+  PlotlyLine(creData, hghlght = ctr, ylab = "% of GDP", startdate = startdate)  
+}
+```
+
+`r if(is.null(creData)){"No data available"}`
+
+### Credit to the private nonfinancial sector: Households and Nonfinancial corporations
+
+```{r echo = FALSE, fig.cap = "Note: H = households, N = nonfinancial corporations; Source: [Bank for International Settlements](https://stats.bis.org/statx/toc/CRE.html)"}
+creDataSect <- GetCreDataSect(cre, ctr, NULL)
+if (!is.null(creDataSect)) {
+  PlotlyBar(creDataSect, ylab = "% of GDP", bmode = "relative",
+            startdate = startdate)
+}
+```
+
+`r if(is.null(creDataSect)){"No data available"}`
+
+### Bank share of total credit to private nonfinancial sector
+
+```{r echo = FALSE, fig.cap = "Source: [Bank for International Settlements](stats.bis.org/statx/toc/CRE.html)"}
+creDataBankshare <- GetCreDataBankshare(cre, ctr, refctr)
+if (!is.null(creDataBankshare)) {
+  PlotlyLine(creDataBankshare, hghlght = ctr, ylab = "% of total credit",
+             startdate = startdate)  
+}
+```
+
+`r if(is.null(creDataBankshare)){"No data available"}`
+
+### Credit-to-GDP gap (actual-trend)
+
+```{r echo = FALSE, fig.cap = "Source: [Bank for International Settlements](stats.bis.org/statx/toc/CTG.html)"}
+ctgData <- GetCtgData(ctg, ctr, refctr)
+if (!is.null(ctgData)) {
+  PlotlyLine(ctgData, hghlght = ctr, ylab = "% of GDP", startdate = startdate)
+}
+```
+
+`r if(is.null(ctgData)){"No data available"}`
+
+### Credit-to-GDP: Ratio (actual data) & trend (HP filter)
+
+```{r echo = FALSE, fig.cap = "Note: A = actual data, B = trend (HP filter with lambda = 400,000); Source: [Bank for International Settlements](stats.bis.org/statx/toc/CTG.html)"}
+ctgDataActualtrend <- GetCtgDataActualtrend(ctg, ctr)
+if (!is.null(ctgDataActualtrend)) {
+  PlotlyLine(ctgDataActualtrend, ylab = "% of GDP", startdate = startdate)
+}
+```
+
+`r if(is.null(ctgDataActualtrend)){"No data available"}`
+
+### Debt service ratio: Private nonfinancial sector
+
+```{r echo = FALSE, fig.cap = "Note: Interest payments and amortisation to income; Source: [Bank for International Settlements](https://stats.bis.org/statx/toc/DSR.html)"}
+dsrData <- GetDsrData(dsr, ctr, refctr)
+if (!is.null(dsrData)) {
+  PlotlyLine(dsrData, hghlght = ctr, ylab = "Debt service / Income (%)",
+             startdate = startdate)
+}
+```
+
+`r if(is.null(dsrData)){"No data available"}`
+
+### Debt service ratio: Households and Nonfinancial corporations
+
+```{r echo = FALSE, fig.cap = "Note: Interest payments and amortisation to income; H = households, N = nonfinancial corporations; Source: [Bank for International Settlements](https://stats.bis.org/statx/toc/DSR.html)"}
+dsrDataSect <- GetDsrDataSect(dsr, ctr, NULL)
+if (!is.null(dsrDataSect)) {
+  PlotlyBar(dsrDataSect, ylab = "Debt service / Income (%)", bmode = "group",
+            startdate = startdate)
+}
+```
+
+`r if(is.null(dsrDataSect)){"No data available"}`
+
+### US dollar exchange rates
+
+```{r echo = FALSE, fig.cap = "Note: LCU/USD (in hundreds of JPY for Japan); monthly average; Source: [Bank for International Settlements](https://stats.bis.org/statx/toc/XR.html)"}
+xruData <- GetXruData(xru, ctr, refctr)
+if (!is.null(xruData)) {
+  PlotlyLine(xruData, hghlght = ctr, ylab = "LCU/USD", startdate = startdate)  
+}
+```
+
+`r if(is.null(xruData)){"No data available"}`
+
+### Nominal effective exchange rate (narrow)
+
+```{r echo = FALSE, fig.cap = "Note: Increase = appreciation; monthly average; Source: [Bank for International Settlements](https://stats.bis.org/statx/toc/XR.html)"}
+eerData <- GetEerData(eer, ctr, refctr)
+if (!is.null(eerData)) {
+  PlotlyLine(eerData, hghlght = ctr, ylab = "Index, 2010 = 100",
+             startdate = startdate)
+}
+```
+
+`r if(is.null(eerData)){"No data available"}`
+
+### Central bank policy rates
+
+```{r echo = FALSE, fig.cap = "Source: [Bank for International Settlements](https://stats.bis.org/statx/toc/CBP.html)"}
+cbpData <- GetCbpData(cbp, ctr, refctr)
+if (!is.null(cbpData)) {
+  PlotlyLine(cbpData, hghlght = ctr, ylab = "%", startdate = startdate)
+}
+```
+
+`r if(is.null(cbpData)){"No data available"}`
+
+### Consumer prices
+
+```{r echo = FALSE, fig.cap = "Source: [Bank for International Settlements](https://stats.bis.org/statx/toc/CPI.html)"}
+cpiData <- GetCpiData(cpi, ctr, refctr)
+if (!is.null(cpiData)) {
+  PlotlyLine(cpiData, hghlght = ctr,
+             ylab = "% year-on-year", startdate = startdate)
+}
+```
+
+`r if(is.null(cpiData)){"No data available"}`
+
+### Property prices
+
+```{r echo = FALSE, fig.cap = "Note: Interest payments and amortisation to income; long series and selected series combined; Source: [Bank for International Settlements](https://stats.bis.org/statx/toc/SPP.html)"}
+sppData <- GetSppData(spp, lpp, ctr, refctr)
+if (!is.null(sppData)) {
+  PlotlyLine(sppData, hghlght = ctr, 
+             ylab = "Index, 2010 = 100", startdate = startdate)
+}
+```
+
+`r if(is.null(sppData)){"No data available"}`
+
+## Column 2
+
+### Claims on `r ctrn`, by currency
+
+```{r echo = FALSE, fig.cap = "Note: UN9 = unallocated; based on LBS (used to judge currency composition of banks' balance sheets, not exposures); Source: [Bank for International Settlements](https://stats.bis.org/statx/toc/LBS.html)"}
+lbsDataCurr <- GetLbsDataCurr(lbs, ctr, lpos = "C")
+if (!is.null(lbsDataCurr)) {
+  PlotlyBar(lbsDataCurr, ylab = "USD", startdate = startdate)
+}
+```
+
+`r if(is.null(lbsDataCurr)){"No data available"}`
+
+### Liabilities to `r ctrn`, by currency
+
+```{r echo = FALSE, fig.cap = "Note: UN9 = unallocated; based on LBS (used to judge currency composition of banks' balance sheets, not exposures); Source: [Bank for International Settlements](https://stats.bis.org/statx/toc/LBS.html)"}
+lbsDataCurr <- GetLbsDataCurr(lbs, ctr, lpos = "L")
+if (!is.null(lbsDataCurr)) {
+  PlotlyBar(lbsDataCurr, ylab = "USD", startdate = startdate)
+}
+```
+
+`r if(is.null(lbsDataCurr)){"No data available"}`
+
+### Claims on `r ctrn`, by instrument
+
+```{r echo = FALSE, fig.cap = "Note: A = all, D = debt securities, G = loans and deposits, I = other, U = unallocated; based on LBS (used to judge currency composition of banks' balance sheets, not exposures); Source: [Bank for International Settlements](https://stats.bis.org/statx/toc/LBS.html)"}
+lbsDataInstrC <- GetLbsDataInstr(lbs, ctr, lpos = "C")
+if (!is.null(lbsDataInstrC)) {
+  PlotlyBar(lbsDataInstrC, ylab = "USD", startdate = startdate)
+}
+```
+
+`r if(is.null(lbsDataInstrC)){"No data available"}`
+
+### Liabilities to `r ctrn`, by instrument
+
+```{r echo = FALSE, fig.cap = "Note: A = all, D = debt securities, G = loans and deposits, I = other, U = unallocated; based on LBS (used to judge currency composition of banks' balance sheets, not exposures); Source: [Bank for International Settlements](https://stats.bis.org/statx/toc/LBS.html)"}
+lbsDataInstrL <- GetLbsDataInstr(lbs, ctr, lpos = "L")
+if (!is.null(lbsDataInstrL)) {
+  PlotlyBar(lbsDataInstrL, ylab = "USD", startdate = startdate)
+}
+```
+
+`r if(is.null(lbsDataInstrL)){"No data available"}`
+
+### Claims on `r ctrn`, by country
+
+```{r echo = FALSE, fig.cap = "Note: Based on LBS (used to judge currency composition of banks' balance sheets, not exposures); Source: [Bank for International Settlements](https://stats.bis.org/statx/toc/LBS.html)"}
+lbsDataCtrC <- GetLbsDataCtr(lbs, ctr, lpos = "C")
+if (!is.null(lbsDataCtrC)) {
+  PlotlyBar(lbsDataCtrC, ylab = "USD", startdate = startdate)
+}
+```
+
+`r if(is.null(lbsDataCtrC)){"No data available"}`
+
+### Liabilities to `r ctrn`, by country
+
+```{r echo = FALSE, fig.cap = "Note: Based on LBS (used to judge currency composition of banks' balance sheets, not exposures); Source: [Bank for International Settlements](https://stats.bis.org/statx/toc/LBS.html)"}
+lbsDataCtrL <- GetLbsDataCtr(lbs, ctr, lpos = "L")
+if (!is.null(lbsDataCtrL)) {
+  PlotlyBar(lbsDataCtrL, ylab = "USD", startdate = startdate)
+}
+```
+
+`r if(is.null(lbsDataCtrL)){"No data available"}`
+
+### Claims on `r ctrn`, consolidated, immediate counterparty, by country
+
+```{r echo = FALSE, fig.cap = "Note: Based on CBS, immediate counterparty basis (used to judge country risk exposure); Source: [Bank for International Settlements](https://stats.bis.org/statx/toc/CBS.html)"}
+cbsDataIcCtr <- GetCbsDataIcCtr(cbs, ctr)
+if (!is.null(cbsDataIcCtr)) {
+  PlotlyBar(cbsDataIcCtr, ylab = "USD", startdate = startdate)
+}
+```
+
+`r if(is.null(cbsDataIcCtr)){"No data available"}`
+
+### Market share of foreign banks' subsidiaries
+
+```{r echo = FALSE, fig.cap = "Note: Based on CBS, immediate counterparty basis (used to judge country risk exposure); Source: [Bank for International Settlements](https://stats.bis.org/statx/toc/CBS.html)"}
+cbsDataIcCtrForeignbankshare <-
+  GetCbsDataIcCtrForeignbankshare(cbs, ctr, refctr)
+if (!is.null(cbsDataIcCtrForeignbankshare)) {
+  PlotlyLine(cbsDataIcCtrForeignbankshare, hghlght = ctr,
+             ylab = "% of total claims, immediate counterparty",
+             startdate = startdate)  
+}
+```
+
+`r if(is.null(cbsDataIcCtrForeignbankshare)){"No data available"}`
+
+### Claims on `r ctrn`, consolidated, ultimate risk basis, by country
+
+```{r echo = FALSE, fig.cap = paste0("Note: Based on CBS, ultimate risk basis (includes lending to affiliates of ", ctrn, " outside of ", ctrn, " that might be guaranteed by parent within ", ctrn, ", i.e. net of risk transfers; used to judge country risk exposure); Source: [Bank for International Settlements](https://stats.bis.org/statx/toc/CBS.html)")}
+cbsDataUrCtr<- GetCbsDataUrCtr(cbs, ctr)
+if (!is.null(cbsDataUrCtr)) {
+  PlotlyBar(cbsDataUrCtr, ylab = "USD", startdate = as.Date("2005-01-01"))
+}
+```
+
+`r if(is.null(cbsDataUrCtr)){"No data available"}`
+
+### Claims on `r ctrn`, consolidated, ultimate risk basis, by sector + other potential exposures
+
+```{r echo = FALSE, fig.cap = "Note: B = banks, O = official, R = non-bank private sector; V = derivatives, W = guarantees extended, X = credit commitments; based on CBS, ultimate risk basis + other potential exposures (used to judge country risk exposure); Source: [Bank for International Settlements](https://stats.bis.org/statx/toc/CBS.html)"}
+cbsDataUrSect <- GetCbsDataUrSect(cbs, ctr)
+if (!is.null(cbsDataUrSect)) {
+  PlotlyBar(cbsDataUrSect, ylab = "USD", startdate = as.Date("2005-01-01"))
+}
+```
+
+`r if(is.null(cbsDataUrSect)){"No data available"}`
+
+### Domestic and international debt securities, resident issuers
+
+```{r echo = FALSE, fig.cap = "DDS = domestic debt securities (difference between total and international debt securities), IDS = international debt securities (D = domestic currency, USD = USD, EU1 = EUR, F = other foreign currency); Source: [Bank for International Settlements](https://stats.bis.org/statx/toc/SEC.html)"}
+secDataRes <- GetSecDataRes(sec, ctr)
+if (!is.null(secDataRes)) {
+  PlotlyBar(secDataRes, ylab = "USD", startdate = startdate)
+}
+```
+
+`r if(is.null(secDataRes)){"No data available"}`
+
+### International debt securities, national issuers
+
+```{r echo = FALSE, fig.cap = "OTH = other currencies; Source: [Bank for International Settlements](https://stats.bis.org/statx/toc/SEC.html)"}
+secDataNatl <- GetSecDataNatl(sec, ctr)
+if (!is.null(secDataNatl)) {
+  PlotlyBar(secDataNatl, ylab = "USD", startdate = startdate)
+}
+```
+
+`r if(is.null(secDataNatl)){"No data available"}`
+
+# Global
+
+## Column 1
+
+### International debt securities by currency of denomination
+
+```{r echo = FALSE, fig.cap = "OTH = other currencies; national and resident concepts are equivalent at world level; Source: [Bank for International Settlements](https://stats.bis.org/statx/toc/SEC.html)"}
+PlotlyBar(GetSecDataCurr(sec), ylab = "USD", startdate = startdate)
+```
+
+### Global liquidity: Total credit to non-bank borrowers, USD
+
+```{r echo = FALSE, fig.cap = "Based on global liquidity indicators (highly correlated with booms/busts in financial conditions); Source: [Bank for International Settlements](https://stats.bis.org/statx/toc/GLI.html)"}
+PlotlyLine(GetGliData(gli, "USD"), ylab = "USD", startdate = startdate)
+```
+
+### Global liquidity: Total credit to non-bank borrowers, EUR
+
+```{r echo = FALSE, fig.cap = "Based on global liquidity indicators (highly correlated with booms/busts in financial conditions); Source: [Bank for International Settlements](https://stats.bis.org/statx/toc/GLI.html)"}
+PlotlyLine(GetGliData(gli, "EUR"), ylab = "EUR", startdate = startdate)
+```
+
+### Global liquidity: Total credit to non-bank borrowers, JPY
+
+```{r echo = FALSE, fig.cap = "Based on global liquidity indicators (highly correlated with booms/busts in financial conditions); Source: [Bank for International Settlements](https://stats.bis.org/statx/toc/GLI.html)"}
+PlotlyLine(GetGliData(gli, "JPY"), ylab = "JPY", startdate = startdate)
+```
+
+### FX turnover by currency, triennial survey
+
+```{r echo = FALSE, fig.cap = "OTH = other currencies; Source: [Bank for International Settlements](https://stats.bis.org/statx/toc/DER.html)"}
+PlotlyBar(GetDerData(der), ylab = "USD", startdate = startdate)
+```
+
+## Column 2
+
+### Notional amounts OTC derivatives outstanding, by risk category
+
+```{r echo = FALSE, fig.cap = "U = other derivatives, D = interest rate, E = equity, T = credit derivatives, J = commodities, B = foreign exchange; notional amounts outstanding; Source: [Bank for International Settlements](https://stats.bis.org/statx/toc/DER.html)"}
+PlotlyBar(GetOtcDataRisk(otc), ylab = "USD", startdate = startdate)
+```
+
+### Gross market value of OTC interest rate derivatives, by currency
+
+```{r echo = FALSE, fig.cap = "Note: Notional amounts outstanding; Source: [Bank for International Settlements](https://stats.bis.org/statx/toc/DER.html)"}
+PlotlyBar(GetOtcDataCurr(otc), ylab = "USD", startdate = startdate)
+```
+
+### Outstanding notional amount of CDS, by sector of counterparty
+
+```{r echo = FALSE, fig.cap = "A = Total (all counterparties), B = reporting dealers, K = central counterparties; Source: [Bank for International Settlements](https://stats.bis.org/statx/toc/DER.html)"}
+PlotlyLine(GetOtcDataCDSSect(otc), ylab = "USD",
+           startdate = as.Date("2005-01-01"))
+```
+
+### Exchange-traded interest rate derivatives, turnover by currency
+
+```{r echo = FALSE, fig.cap = "Average daily turnover, notional amounts, 3-month moving averages; Source: [Bank for International Settlements](https://stats.bis.org/statx/toc/DER.html)"}
+PlotlyBar(GetXtdData(xtd, riskcat = "C", mak = 3), ylab = "USD",
+          startdate = startdate)
+```
+
+### Exchange-traded foreign exchange derivatives, turnover by currency
+
+```{r echo = FALSE, fig.cap = "Average daily turnover, notional amounts, 3-month moving averages; Source: [Bank for International Settlements](https://stats.bis.org/statx/toc/DER.html)"}
+PlotlyBar(GetXtdData(xtd, riskcat = "B", mak = 3), ylab = "USD",
+          startdate = startdate)
+```
+
