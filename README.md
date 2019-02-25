@@ -2,7 +2,7 @@
 
 This repository contains code to create a dashboard of BIS statistics using [R markdown](https://rmarkdown.rstudio.com/index.html) and [flexdashboard](https://rmarkdown.rstudio.com/flexdashboard/).
 
-The dashboard will give you a set of charts for a user-specified economy as well as the global economy. The presentation is fairly general and self-explanatory, but sticks to the BIS's abbreviation format for concepts and identifiers in order to work well on small screens. By default, exchange rate data are based on [nominal effective exchange rates](https://stats.bis.org/statx/toc/XR.html) (which cover fewer countries but longer history), [bank liabilities](https://stats.bis.org/statx/toc/LBS.html) are shown with a negative sign, and [domestic debt securities](https://www.bis.org/statistics/about_securities_stats.htm) are calculated as the difference between [total and international debt securities](https://www.bis.org/statistics/about_securities_stats.htm) (as some economies do not report them separately).
+The dashboard will give you a set of charts for a user-specified economy as well as the global economy. The presentation is fairly self-explanatory, but sticks to the BIS's abbreviation format for concepts and identifiers in order to work well on small screens. By default, exchange rate data are based on [nominal effective exchange rates](https://stats.bis.org/statx/toc/XR.html) (which cover fewer countries but longer history), [bank liabilities](https://stats.bis.org/statx/toc/LBS.html) are shown with a negative sign, and [domestic debt securities](https://www.bis.org/statistics/about_securities_stats.htm) are calculated as the difference between [total and international debt securities](https://www.bis.org/statistics/about_securities_stats.htm) (as some economies do not report them separately).
 
 ## How to use the code
 
@@ -18,7 +18,7 @@ The dashboard will give you a set of charts for a user-specified economy as well
     source("refresh_bis_data.R")
     ```
 
-3. Once you have the data, call rmarkdown's `render()` function to create a dashboard for an economy of your choice, identified by ISO 2-character code, e.g. "JP" for Japan.
+3. Once you have the data, call rmarkdown's `render()` function to create a dashboard for an economy of your choice, identified by [ISO 2-character code](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2), e.g. "JP" for Japan.
 
     ``` r
     rmarkdown::render("bis_dashboard.Rmd", params = list(ctr = "JP"), output_file = "bis_dashboard_JP.html")
