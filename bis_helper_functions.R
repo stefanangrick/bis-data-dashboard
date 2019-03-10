@@ -93,7 +93,7 @@ PlotlyBar <- function(xts.obj, labs = NULL, hghlght = "", xlab = "",
   
   # Set x date range
   td <- as.numeric(diff(index(xts.obj)[(nrow(xts.obj) - 1):nrow(xts.obj)])) / 2
-  xstart <- (as.numeric(startdate) - td / 2) * 24 * 60 *60 * 1000
+  xstart <- (as.numeric(startdate) - td / 2) * 24 * 60 * 60 * 1000
   xend   <- (as.numeric(max(index(xts.obj))) + td) * 24 * 60 * 60 * 1000
   
   # Set up plotly object
