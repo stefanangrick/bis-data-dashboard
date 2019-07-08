@@ -18,7 +18,7 @@ The dashboard will give you a set of charts for a user-specified economy as well
     source("refresh_bis_data.R")
     ```
 
-3. Once you have the data, call rmarkdown's `render()` function to create a dashboard for an economy of your choice, identified by [ISO 2-character code](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2), e.g. "JP" for Japan.
+3. Once you have the data, call rmarkdown's `render()` function to create a dashboard for an economy of your choice, identified by [ISO 2-character code](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2), e.g. "JP" for Japan. Use "XM" for the euro area.
 
     ``` r
     rmarkdown::render("bis_dashboard.Rmd", params = list(ctr = "JP"), output_file = "bis_dashboard_JP.html")
